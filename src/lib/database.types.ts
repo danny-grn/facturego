@@ -214,6 +214,10 @@ export interface Database {
         Args: { p_document_id: string; p_event_type: string; p_metadata?: Json };
         Returns: undefined;
       };
+      get_client_portal: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
       get_signable_by_token: {
         Args: { p_token: string };
         Returns: Json;

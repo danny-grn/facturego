@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileText, Users, FileSignature, Settings, X } from "lucide-react";
+import { LayoutDashboard, FileText, Users, FileSignature, Settings, Inbox, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/logo";
 
@@ -14,8 +14,18 @@ const NAV = [
   { href: "/dashboard/settings", label: "Paramètres", icon: Settings },
 ];
 
-export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+export function Sidebar({
+  onNavigate,
+  showClientPortal = false,
+}: {
+  onNavigate?: () => void;
+  /** N'apparaît que si des documents sont adressés à l'email du compte. */
+  showClientPortal?: boolean;
+}) {
   const pathname = usePathname();
+  const nav = showClientPortal
+    ? [...NAV, { href: "/espace", label: "Mon espace", icon: Inbox }]
+    : NAV;
 
   return (
     <div className="flex h-full flex-col bg-ink-900 text-paper">
@@ -34,7 +44,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active =
             item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
           const Icon = item.icon;

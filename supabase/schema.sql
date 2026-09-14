@@ -508,5 +508,71 @@ $$;
 grant execute on function public.submit_signature_by_token(uuid, text, text, text, text, text, text) to anon, authenticated;
 
 -- =============================================================================
+-- RPC — ESPACE CLIENT
+-- =============================================================================
+-- Un destinataire qui se crée un compte avec l'adresse figurant sur sa fiche
+-- client retrouve ici tout ce qui lui a été adressé. Le rapprochement se fait
+-- sur l'email (insensible à la casse) : aucune colonne de liaison à maintenir.
+-- Comme pour la signature publique, tout passe par cette fonction
+-- SECURITY DEFINER — aucune policy supplémentaire n'est ouverte sur les tables.
+create or replace function public.get_client_portal()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text := lower(trim(coalesce(auth.jwt() ->> 'email', '')));
+begin
+  if v_email = '' then
+    return jsonb_build_object('email', null, 'invoices', '[]'::jsonb, 'documents', '[]'::jsonb);
+  end if;
+
+  return jsonb_build_object(
+    'email', v_email,
+    'invoices', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id',             i.id,
+        'invoice_number', i.invoice_number,
+        'status',         i.status,
+        'issue_date',     i.issue_date,
+        'due_date',       i.due_date,
+        'currency',       i.currency,
+        'total',          i.total,
+        'share_token',    i.share_token,
+        'issuer',         coalesce(nullif(p.company_name, ''), 'Émetteur')
+      ) order by i.issue_date desc, i.created_at desc)
+      from public.invoices i
+      join public.clients c on c.id = i.client_id
+      left join public.profiles p on p.id = i.user_id
+      where lower(c.email) = v_email
+        and i.status not in ('draft', 'cancelled')
+    ), '[]'::jsonb),
+    'documents', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id',          d.id,
+        'title',       d.title,
+        'status',      d.status,
+        'created_at',  d.created_at,
+        'share_token', d.share_token,
+        'issuer',      coalesce(nullif(p.company_name, ''), 'Émetteur')
+      ) order by d.created_at desc)
+      from public.documents d
+      join public.clients c on c.id = d.client_id
+      left join public.profiles p on p.id = d.user_id
+      where lower(c.email) = v_email
+        and d.status not in ('draft', 'cancelled')
+    ), '[]'::jsonb)
+  );
+end;
+$$;
+
+grant execute on function public.get_client_portal() to authenticated;
+
+-- Le rapprochement se fait par email : sans index, chaque ouverture de l'espace
+-- balaie la table clients.
+create index if not exists clients_email_lower_idx on public.clients (lower(email));
+
+-- =============================================================================
 -- Fin du script.
 -- =============================================================================

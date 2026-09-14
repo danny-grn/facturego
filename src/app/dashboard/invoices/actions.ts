@@ -241,6 +241,7 @@ async function emailInvoiceToClient(
       intro: `Vous trouverez ci-joint la facture ${result.invoice.invoice_number} d'un montant de ${amount}. Vous pouvez la consulter et la signer en ligne via le lien ci-dessous.`,
       link,
       buttonLabel: "Consulter et signer la facture",
+      portalUrl: appUrl ? `${appUrl}/espace` : null,
     }),
     attachments,
   });

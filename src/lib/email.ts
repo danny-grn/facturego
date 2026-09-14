@@ -85,12 +85,15 @@ export function buildSignatureEmailHtml({
   intro,
   link,
   buttonLabel,
+  portalUrl,
 }: {
   recipientName: string | null;
   senderName: string;
   intro: string;
   link: string;
   buttonLabel: string;
+  /** Espace où le destinataire retrouve tout ce qui lui a été adressé. */
+  portalUrl?: string | null;
 }) {
   const greeting = recipientName ? `Bonjour ${escapeHtml(recipientName)},` : "Bonjour,";
 
@@ -106,7 +109,12 @@ export function buildSignatureEmailHtml({
         </p>
         <p style="margin:0 0 8px;font-size:13px;color:#57534e;">Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :</p>
         <p style="margin:0 0 24px;font-size:13px;word-break:break-all;color:#57534e;">${escapeHtml(link)}</p>
-        <p style="margin:0;font-size:15px;">Cordialement,<br />${escapeHtml(senderName)}</p>
+        <p style="margin:0 0 24px;font-size:15px;">Cordialement,<br />${escapeHtml(senderName)}</p>
+        ${
+          portalUrl
+            ? `<p style="margin:0;padding-top:20px;border-top:1px solid #e7e5e4;font-size:13px;color:#57534e;">Retrouvez tous les documents qui vous sont adressés dans <a href="${encodeURI(portalUrl)}" style="color:#7f1d1d;">votre espace</a>, en créant un compte avec cette adresse email.</p>`
+            : ""
+        }
       </td></tr>
     </table>
   </body>

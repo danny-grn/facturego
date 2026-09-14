@@ -13,6 +13,11 @@ Next.js 16 (App Router) · TypeScript · Tailwind v4 · Supabase (auth + base de
 - **Documents génériques** : import de n'importe quel PDF (devis, contrat…) à faire signer.
 - **Signature électronique** : lien public unique et sécurisé (`/sign/[token]`), signature manuscrite
   au doigt/souris, horodatage, adresse IP, empreinte, certificat de signature intégré au PDF.
+- **Envoi par email** : la facture part vers l'adresse de la fiche client avec le lien de signature et
+  le PDF en pièce jointe (optionnel, voir `RESEND_API_KEY`).
+- **Espace client** (`/espace`) : un destinataire qui crée un compte avec l'adresse figurant sur sa
+  fiche client y retrouve toutes les factures et documents qui lui ont été adressés, et peut les
+  signer depuis là.
 - **Tableau de bord** : encaissements, montants en attente/en retard, graphique des 6 derniers mois,
   répartition par statut.
 - **Paramètres** : informations d'entreprise, logo, coordonnées bancaires, préfixe de facturation,
@@ -89,6 +94,11 @@ npm run test:watch
 - Le flux de signature public ne passe par **aucune** policy RLS ouverte à `anon` : il transite
   exclusivement par les fonctions `get_signable_by_token` et `submit_signature_by_token`, qui vérifient
   le jeton de partage (UUID non devinable, généré côté base de données).
+- L'espace client suit le même principe : `get_client_portal` (`SECURITY DEFINER`) rapproche l'email du
+  compte connecté de celui des fiches clients et ne renvoie que les documents correspondants — aucune
+  policy n'est ouverte sur les tables. Le rapprochement se fait sur une adresse email **vérifiée par
+  Supabase Auth** ; laissez la confirmation d'email activée, sinon n'importe qui peut déclarer l'adresse
+  d'un tiers à l'inscription et lire ses factures.
 - Les fichiers PDF importés et les signatures manuscrites sont stockés encodés en base64 directement en
   base — suffisant pour un usage TPE/indépendant ; envisagez Supabase Storage si vous gérez de gros
   volumes de documents.

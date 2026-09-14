@@ -10,10 +10,12 @@ import { initials } from "@/lib/format";
 export function DashboardShell({
   companyName,
   email,
+  showClientPortal = false,
   children,
 }: {
   companyName: string;
   email: string;
+  showClientPortal?: boolean;
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -34,7 +36,7 @@ export function DashboardShell({
     <div className="flex min-h-screen bg-paper">
       <aside className="hidden w-64 shrink-0 lg:block">
         <div className="fixed h-screen w-64">
-          <Sidebar />
+          <Sidebar showClientPortal={showClientPortal} />
         </div>
       </aside>
 
@@ -42,7 +44,7 @@ export function DashboardShell({
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-ink-900/50" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0 w-64">
-            <Sidebar onNavigate={() => setMobileOpen(false)} />
+            <Sidebar showClientPortal={showClientPortal} onNavigate={() => setMobileOpen(false)} />
           </div>
         </div>
       )}
