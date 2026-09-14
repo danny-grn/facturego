@@ -545,7 +545,7 @@ begin
       from public.invoices i
       join public.clients c on c.id = i.client_id
       left join public.profiles p on p.id = i.user_id
-      where lower(c.email) = v_email
+      where lower(trim(c.email)) = v_email
         and i.status not in ('draft', 'cancelled')
     ), '[]'::jsonb),
     'documents', coalesce((
@@ -560,7 +560,7 @@ begin
       from public.documents d
       join public.clients c on c.id = d.client_id
       left join public.profiles p on p.id = d.user_id
-      where lower(c.email) = v_email
+      where lower(trim(c.email)) = v_email
         and d.status not in ('draft', 'cancelled')
     ), '[]'::jsonb)
   );
@@ -571,7 +571,10 @@ grant execute on function public.get_client_portal() to authenticated;
 
 -- Le rapprochement se fait par email : sans index, chaque ouverture de l'espace
 -- balaie la table clients.
-create index if not exists clients_email_lower_idx on public.clients (lower(email));
+-- L'index précédent portait sur lower(email) : « if not exists » ne l'aurait
+-- pas redéfini, on le remplace explicitement.
+drop index if exists clients_email_lower_idx;
+create index if not exists clients_email_match_idx on public.clients (lower(trim(email)));
 
 -- =============================================================================
 -- Fin du script.
