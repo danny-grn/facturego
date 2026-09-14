@@ -109,7 +109,7 @@ export function InvoicesView({ invoices }: { invoices: InvoiceRow[] }) {
               </THead>
               <TBody>
                 {filtered.map((invoice) => (
-                  <TR key={invoice.id} clickable>
+                  <TR key={invoice.id} href={`/dashboard/invoices/${invoice.id}`}>
                     <TD>
                       <Link
                         href={`/dashboard/invoices/${invoice.id}`}

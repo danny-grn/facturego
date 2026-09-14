@@ -68,7 +68,7 @@ export function DocumentsView({ documents }: { documents: DocumentRow[] }) {
             </THead>
             <TBody>
               {filtered.map((doc) => (
-                <TR key={doc.id} clickable>
+                <TR key={doc.id} href={`/dashboard/documents/${doc.id}`}>
                   <TD>
                     <Link href={`/dashboard/documents/${doc.id}`} className="font-medium text-ink-900 hover:text-accent-600">
                       {doc.title}

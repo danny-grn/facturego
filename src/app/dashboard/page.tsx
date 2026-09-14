@@ -162,7 +162,7 @@ export default async function DashboardPage() {
             </THead>
             <TBody>
               {recentInvoices.map((invoice) => (
-                <TR key={invoice.id} clickable>
+                <TR key={invoice.id} href={`/dashboard/invoices/${invoice.id}`}>
                   <TD>
                     <Link href={`/dashboard/invoices/${invoice.id}`} className="font-medium text-ink-900 hover:text-accent-600">
                       {invoice.invoice_number}

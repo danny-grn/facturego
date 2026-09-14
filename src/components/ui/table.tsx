@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 export function Table({ className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) {
@@ -20,11 +23,28 @@ export function TBody({ className, ...props }: React.HTMLAttributes<HTMLTableSec
 export function TR({
   className,
   clickable,
+  href,
+  onClick,
   ...props
-}: React.HTMLAttributes<HTMLTableRowElement> & { clickable?: boolean }) {
+}: React.HTMLAttributes<HTMLTableRowElement> & { clickable?: boolean; href?: string }) {
+  const router = useRouter();
+  const interactive = clickable || Boolean(href);
+
+  // Toute la ligne navigue, pas seulement le lien de la première colonne.
+  // On laisse passer les clics sur un lien ou un bouton internes, ainsi que
+  // les clics modifiés (nouvel onglet) que le navigateur gère déjà.
+  function handleClick(event: React.MouseEvent<HTMLTableRowElement>) {
+    onClick?.(event);
+    if (!href || event.defaultPrevented) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    if ((event.target as HTMLElement).closest("a, button, input, label, select")) return;
+    router.push(href);
+  }
+
   return (
     <tr
-      className={cn(clickable && "cursor-pointer transition-colors hover:bg-paper-dim/70", className)}
+      className={cn(interactive && "cursor-pointer transition-colors hover:bg-paper-dim/70", className)}
+      onClick={handleClick}
       {...props}
     />
   );
