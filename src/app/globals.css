@@ -1,26 +1,164 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces — fond "papier", chaleureux, pas blanc pur */
+  --color-paper: #fbf9f4;
+  --color-paper-dim: #f3efe4;
+  --color-surface: #ffffff;
+
+  /* Encre — texte et surfaces sombres, teinte chaude plutôt que gris froid */
+  --color-ink-900: #1b1b18;
+  --color-ink-800: #2b2a25;
+  --color-ink-700: #4a4944;
+  --color-ink-500: #78766c;
+  --color-ink-300: #aca894;
+  --color-ink-200: #ded8c4;
+  --color-ink-100: #ece7d9;
+
+  --color-line: #e3ddc9;
+  --color-line-strong: #cfc7ac;
+
+  /* Accent de marque — bordeaux profond, évoque le cachet de cire / l'encre de signature */
+  --color-accent-700: #4e1b24;
+  --color-accent-600: #6e2430;
+  --color-accent-500: #832c39;
+  --color-accent-400: #a44655;
+  --color-accent-100: #eed7db;
+  --color-accent-50: #f8eef0;
+
+  /* États métier */
+  --color-success-600: #285c40;
+  --color-success-500: #34714f;
+  --color-success-100: #dcead0;
+
+  --color-warning-600: #8a5e0b;
+  --color-warning-500: #ad7a14;
+  --color-warning-100: #f5e6bd;
+
+  --color-danger-700: #7c2a1c;
+  --color-danger-600: #9c3423;
+  --color-danger-500: #b4432f;
+  --color-danger-100: #f3dcd0;
+
+  --color-info-600: #1c5f58;
+  --color-info-500: #226e66;
+  --color-info-100: #d9ece5;
+
+  --shadow-card: 0 1px 1px rgba(27, 27, 24, 0.03), 0 4px 12px -4px rgba(27, 27, 24, 0.08);
+  --shadow-pop: 0 8px 24px -6px rgba(27, 27, 24, 0.18), 0 2px 6px -2px rgba(27, 27, 24, 0.1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--color-paper);
+  --color-paper-dim: var(--color-paper-dim);
+  --color-surface: var(--color-surface);
+
+  --color-ink-900: var(--color-ink-900);
+  --color-ink-800: var(--color-ink-800);
+  --color-ink-700: var(--color-ink-700);
+  --color-ink-500: var(--color-ink-500);
+  --color-ink-300: var(--color-ink-300);
+  --color-ink-200: var(--color-ink-200);
+  --color-ink-100: var(--color-ink-100);
+
+  --color-line: var(--color-line);
+  --color-line-strong: var(--color-line-strong);
+
+  --color-accent-700: var(--color-accent-700);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-50: var(--color-accent-50);
+
+  --color-success-600: var(--color-success-600);
+  --color-success-500: var(--color-success-500);
+  --color-success-100: var(--color-success-100);
+
+  --color-warning-600: var(--color-warning-600);
+  --color-warning-500: var(--color-warning-500);
+  --color-warning-100: var(--color-warning-100);
+
+  --color-danger-700: var(--color-danger-700);
+  --color-danger-600: var(--color-danger-600);
+  --color-danger-500: var(--color-danger-500);
+  --color-danger-100: var(--color-danger-100);
+
+  --color-info-600: var(--color-info-600);
+  --color-info-500: var(--color-info-500);
+  --color-info-100: var(--color-info-100);
+
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), ui-serif, serif;
+
+  --shadow-card: var(--shadow-card);
+  --shadow-pop: var(--shadow-pop);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--color-line);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink-900);
+}
+
+::selection {
+  background: var(--color-accent-100);
+  color: var(--color-accent-700);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Scrollbar discrète */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-ink-200);
+  border-radius: 999px;
+  border: 2px solid var(--color-paper);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-300);
+}
+
+.font-display {
+  font-family: var(--font-display), ui-serif, serif;
+  font-feature-settings: "ss01" on;
+}
+
+dialog {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+dialog[open] {
+  opacity: 1;
+}
+dialog::backdrop {
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
