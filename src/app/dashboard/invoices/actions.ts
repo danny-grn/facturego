@@ -6,6 +6,17 @@ import { createClient as createSupabaseServerClient } from "@/lib/supabase/serve
 import { invoiceSchema, type InvoiceInput } from "@/lib/validation";
 import { computeInvoiceTotals } from "@/lib/invoice-utils";
 
+function fail(scope: string, error: unknown, message: string) {
+  const e = error as { code?: string; message?: string; details?: string; hint?: string } | null;
+  console.error(`[invoices] ${scope}`, {
+    code: e?.code,
+    message: e?.message,
+    details: e?.details,
+    hint: e?.hint,
+  });
+  return { error: e?.code ? `${message} (${e.code}: ${e.message})` : message };
+}
+
 async function requireUser() {
   const supabase = await createSupabaseServerClient();
   const {
@@ -25,7 +36,11 @@ export async function createInvoiceAction(input: InvoiceInput) {
     p_user_id: user.id,
   });
   if (numberError || !invoiceNumber) {
-    return { error: "Impossible de générer le numéro de facture." };
+    return fail(
+      "next_invoice_number",
+      numberError,
+      "Impossible de générer le numéro de facture. Vérifiez que votre profil existe (Paramètres)."
+    );
   }
 
   const totals = computeInvoiceTotals(parsed.data.items);
@@ -48,7 +63,7 @@ export async function createInvoiceAction(input: InvoiceInput) {
     .select("id")
     .single();
 
-  if (error || !invoice) return { error: "Impossible de créer la facture." };
+  if (error || !invoice) return fail("createInvoice", error, "Impossible de créer la facture.");
 
   const { error: itemsError } = await supabase.from("invoice_items").insert(
     parsed.data.items.map((item, index) => ({
@@ -60,7 +75,7 @@ export async function createInvoiceAction(input: InvoiceInput) {
       position: index,
     }))
   );
-  if (itemsError) return { error: "Impossible d'enregistrer les lignes de la facture." };
+  if (itemsError) return fail("createInvoiceItems", itemsError, "Impossible d'enregistrer les lignes de la facture.");
 
   await supabase.rpc("log_invoice_activity", {
     p_invoice_id: invoice.id,
