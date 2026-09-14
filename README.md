@@ -53,7 +53,7 @@ n'est nécessaire : tout l'accès public (liens de signature) passe par des fonc
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | oui | URL du projet Supabase |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | oui | Clé `anon public` |
-| `NEXT_PUBLIC_APP_URL` | oui | Origine publique de l'app, utilisée pour construire les liens de signature |
+| `NEXT_PUBLIC_APP_URL` | non | Repli seulement : les liens sont construits à partir de l'hôte de la requête |
 | `RESEND_API_KEY` | non | Clé [Resend](https://resend.com) — active l'envoi automatique des factures par email |
 | `EMAIL_FROM` | non | Expéditeur, ex. `Facturation <facturation@mondomaine.fr>` (domaine vérifié chez Resend) |
 

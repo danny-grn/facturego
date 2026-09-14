@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getAppUrl } from "@/lib/app-url";
 import { loginSchema, signupSchema } from "@/lib/validation";
 import { translateAuthError } from "@/lib/auth-errors";
 
@@ -47,7 +48,7 @@ export async function signupAction(
   }
 
   const supabase = await createClient();
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = await getAppUrl();
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,

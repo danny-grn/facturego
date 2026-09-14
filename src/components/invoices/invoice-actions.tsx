@@ -29,7 +29,7 @@ export function InvoiceActions({
   const [cancelOpen, setCancelOpen] = React.useState(false);
   const [deleteOpen, setDeleteOpen] = React.useState(false);
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== "undefined" ? window.location.origin : "");
+  const appUrl = typeof window !== "undefined" ? window.location.origin : "";
   const shareLink = `${appUrl}/sign/${invoice.share_token}`;
 
   async function handleSend() {

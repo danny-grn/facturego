@@ -9,6 +9,7 @@ import { getInvoiceWithItems, getProfile } from "@/lib/queries";
 import { buildInvoicePdf } from "@/lib/pdf/invoice-pdf";
 import { buildSignatureEmailHtml, isEmailConfigured, sendEmail } from "@/lib/email";
 import { formatCurrency } from "@/lib/format";
+import { getAppUrl } from "@/lib/app-url";
 
 function fail(scope: string, error: unknown, message: string) {
   const e = error as { code?: string; message?: string; details?: string; hint?: string } | null;
@@ -207,7 +208,7 @@ async function emailInvoiceToClient(
 
   const profile = await getProfile(supabase, userId);
   const senderName = profile?.company_name?.trim() || "FactureGO";
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const appUrl = await getAppUrl();
   const link = `${appUrl}/sign/${result.invoice.share_token}`;
 
   let attachments;
