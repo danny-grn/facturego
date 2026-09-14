@@ -6,6 +6,7 @@ import { getInvoiceWithItems, getClients, getProfile } from "@/lib/queries";
 import { InvoiceForm } from "@/components/invoices/invoice-form";
 import { InvoiceDetail } from "@/components/invoices/invoice-detail";
 import { InvoiceActions } from "@/components/invoices/invoice-actions";
+import { ClientPortalNotice, NoClientNotice } from "@/components/invoices/client-portal-notice";
 
 export default async function InvoiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -35,6 +36,9 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
           <h1 className="font-display text-2xl font-medium text-ink-900">Brouillon {invoice.invoice_number}</h1>
           <InvoiceActions invoice={invoice} clientEmail={client?.email} />
         </div>
+        <div className="mb-6">
+          {invoice.client_id ? <ClientPortalNotice clientId={invoice.client_id} /> : <NoClientNotice />}
+        </div>
         <InvoiceForm clients={clients} profile={profile} invoice={invoice} items={items} />
       </div>
     );
@@ -48,6 +52,9 @@ export default async function InvoiceDetailPage({ params }: { params: Promise<{ 
       >
         <ArrowLeft className="h-3.5 w-3.5" /> Retour aux factures
       </Link>
+      <div className="mb-6">
+        {invoice.client_id ? <ClientPortalNotice clientId={invoice.client_id} /> : <NoClientNotice />}
+      </div>
       <InvoiceDetail invoice={invoice} items={items} client={client} signature={signature} activity={activity} />
     </div>
   );

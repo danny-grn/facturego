@@ -569,6 +569,40 @@ $$;
 
 grant execute on function public.get_client_portal() to authenticated;
 
+-- Indique à l'émetteur si le destinataire d'une fiche client pourra
+-- effectivement retrouver ses documents dans l'espace client.
+-- L'appelant ne peut interroger que ses propres fiches : impossible de tester
+-- l'existence d'un compte pour une adresse arbitraire.
+create or replace function public.client_portal_access(p_client_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email text;
+begin
+  select lower(trim(coalesce(email, ''))) into v_email
+  from public.clients
+  where id = p_client_id and user_id = auth.uid();
+
+  if not found then
+    raise exception 'forbidden';
+  end if;
+
+  if v_email = '' then
+    return jsonb_build_object('email', null, 'has_account', false);
+  end if;
+
+  return jsonb_build_object(
+    'email', v_email,
+    'has_account', exists (select 1 from auth.users u where lower(trim(u.email)) = v_email)
+  );
+end;
+$$;
+
+grant execute on function public.client_portal_access(uuid) to authenticated;
+
 -- Le rapprochement se fait par email : sans index, chaque ouverture de l'espace
 -- balaie la table clients.
 -- L'index précédent portait sur lower(email) : « if not exists » ne l'aurait

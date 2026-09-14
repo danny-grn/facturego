@@ -214,6 +214,10 @@ export interface Database {
         Args: { p_document_id: string; p_event_type: string; p_metadata?: Json };
         Returns: undefined;
       };
+      client_portal_access: {
+        Args: { p_client_id: string };
+        Returns: Json;
+      };
       get_client_portal: {
         Args: Record<string, never>;
         Returns: Json;
