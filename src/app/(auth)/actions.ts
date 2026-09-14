@@ -65,8 +65,7 @@ export async function signupAction(
   if (data.user) {
     await supabase
       .from("profiles")
-      .update({ company_name: parsed.data.companyName })
-      .eq("id", data.user.id);
+      .upsert({ id: data.user.id, email: data.user.email, company_name: parsed.data.companyName });
   }
 
   if (!data.session) {

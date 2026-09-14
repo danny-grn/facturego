@@ -224,6 +224,14 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Rattrapage : crée le profil manquant des comptes inscrits avant la pose du
+-- trigger (sans profil, la numérotation des factures renvoie NULL).
+insert into public.profiles (id, email, company_name)
+select u.id, u.email, ''
+from auth.users u
+left join public.profiles p on p.id = u.id
+where p.id is null;
+
 -- =============================================================================
 -- RLS — activation
 -- =============================================================================
@@ -308,6 +316,12 @@ begin
   if p_user_id <> auth.uid() then
     raise exception 'forbidden';
   end if;
+
+  -- Filet de sécurité : sans ligne profiles, l'UPDATE ci-dessous ne renvoie
+  -- rien et la fonction retournerait NULL.
+  insert into public.profiles (id, email)
+  select p_user_id, u.email from auth.users u where u.id = p_user_id
+  on conflict (id) do nothing;
 
   update public.profiles
   set next_invoice_seq = next_invoice_seq + 1
