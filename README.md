@@ -44,6 +44,17 @@ Renseignez `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Aucune
 n'est nécessaire : tout l'accès public (liens de signature) passe par des fonctions PostgreSQL
 `SECURITY DEFINER` dédiées, pas par un contournement des règles RLS côté application.
 
+| Variable | Requise | Rôle |
+| --- | --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | oui | URL du projet Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | oui | Clé `anon public` |
+| `NEXT_PUBLIC_APP_URL` | oui | Origine publique de l'app, utilisée pour construire les liens de signature |
+| `RESEND_API_KEY` | non | Clé [Resend](https://resend.com) — active l'envoi automatique des factures par email |
+| `EMAIL_FROM` | non | Expéditeur, ex. `Facturation <facturation@mondomaine.fr>` (domaine vérifié chez Resend) |
+
+Sans `RESEND_API_KEY` / `EMAIL_FROM`, l'application reste pleinement fonctionnelle : l'envoi bascule sur
+le partage manuel du lien de signature.
+
 ### 4. Lancer l'application
 
 ```bash

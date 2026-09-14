@@ -36,12 +36,30 @@ export function InvoiceActions({
     setSending(true);
     const result = await sendInvoiceAction(invoice.id);
     setSending(false);
-    if (result?.error) {
+    if ("error" in result) {
       toast.error(result.error);
       return;
     }
-    toast.success("Facture envoyée");
-    setShareOpen(true);
+
+    // La facture est envoyée dans tous les cas ; seul l'email peut manquer,
+    // on ouvre alors le partage manuel du lien.
+    switch (result.email.status) {
+      case "sent":
+        toast.success(`Facture envoyée à ${result.email.to}`);
+        break;
+      case "no_recipient":
+        toast.warning("Facture envoyée. Aucun email sur la fiche client : partagez le lien.");
+        setShareOpen(true);
+        break;
+      case "not_configured":
+        toast.warning("Facture envoyée. L'envoi automatique d'email n'est pas configuré : partagez le lien.");
+        setShareOpen(true);
+        break;
+      case "failed":
+        toast.error(`Facture envoyée, mais l'email n'est pas parti : ${result.email.error}`);
+        setShareOpen(true);
+        break;
+    }
     router.refresh();
   }
 

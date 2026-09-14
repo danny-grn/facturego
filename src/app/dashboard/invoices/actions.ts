@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { createClient as createSupabaseServerClient } from "@/lib/supabase/server";
 import { invoiceSchema, type InvoiceInput } from "@/lib/validation";
 import { computeInvoiceTotals } from "@/lib/invoice-utils";
+import { getInvoiceWithItems, getProfile } from "@/lib/queries";
+import { buildInvoicePdf } from "@/lib/pdf/invoice-pdf";
+import { buildSignatureEmailHtml, isEmailConfigured, sendEmail } from "@/lib/email";
+import { formatCurrency } from "@/lib/format";
 
 function fail(scope: string, error: unknown, message: string) {
   const e = error as { code?: string; message?: string; details?: string; hint?: string } | null;
@@ -148,25 +152,101 @@ export async function deleteInvoiceAction(id: string) {
   return { success: true };
 }
 
+export type InvoiceEmailOutcome =
+  | { status: "sent"; to: string }
+  | { status: "no_recipient" }
+  | { status: "not_configured" }
+  | { status: "failed"; error: string };
+
 export async function sendInvoiceAction(id: string) {
-  const { supabase } = await requireUser();
+  const { supabase, user } = await requireUser();
+  if (!user) return { error: "Session expirée, reconnectez-vous." };
+
   const { data, error } = await supabase
     .from("invoices")
     .update({ status: "sent", sent_at: new Date().toISOString() })
     .eq("id", id)
     .select("share_token")
     .single();
-  if (error || !data) return { error: "Impossible d'envoyer la facture." };
+  if (error || !data) return fail("sendInvoice", error, "Impossible d'envoyer la facture.");
+
+  const email = await emailInvoiceToClient(supabase, user.id, id);
 
   await supabase.rpc("log_invoice_activity", {
     p_invoice_id: id,
     p_event_type: "sent",
-    p_metadata: {},
+    p_metadata: email.status === "sent" ? { email_to: email.to } : { email: email.status },
   });
 
   revalidatePath(`/dashboard/invoices/${id}`);
   revalidatePath("/dashboard/invoices");
-  return { success: true, shareToken: data.share_token };
+  return { success: true, shareToken: data.share_token, email };
+}
+
+/**
+ * Envoie au client le lien de signature et le PDF de la facture.
+ * L'échec n'annule pas l'envoi : la facture reste au statut « envoyée » et le
+ * lien peut toujours être partagé à la main depuis le détail de la facture.
+ */
+async function emailInvoiceToClient(
+  supabase: Awaited<ReturnType<typeof requireUser>>["supabase"],
+  userId: string,
+  invoiceId: string
+): Promise<InvoiceEmailOutcome> {
+  const result = await getInvoiceWithItems(supabase, invoiceId);
+  // Filet supplémentaire : la RLS filtre déjà, mais une action est un point
+  // d'entrée public, on revérifie la propriété avant d'envoyer quoi que ce soit.
+  if (!result?.invoice || result.invoice.user_id !== userId) {
+    return { status: "failed", error: "Facture introuvable." };
+  }
+
+  const client = result.invoice.client ?? null;
+  const recipient = client?.email?.trim();
+  if (!recipient) return { status: "no_recipient" };
+  if (!isEmailConfigured()) return { status: "not_configured" };
+
+  const profile = await getProfile(supabase, userId);
+  const senderName = profile?.company_name?.trim() || "FactureGO";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const link = `${appUrl}/sign/${result.invoice.share_token}`;
+
+  let attachments;
+  try {
+    const bytes = await buildInvoicePdf({
+      invoice: result.invoice,
+      items: result.items,
+      client,
+      profile,
+      signature: result.signature,
+    });
+    attachments = [
+      {
+        filename: `${result.invoice.invoice_number}.pdf`,
+        content: Buffer.from(bytes).toString("base64"),
+      },
+    ];
+  } catch (pdfError) {
+    // Le PDF est un confort : on envoie le lien même si sa génération échoue.
+    console.error("[invoices] génération du PDF pour l'email", pdfError);
+  }
+
+  const amount = formatCurrency(result.invoice.total, result.invoice.currency);
+  const sent = await sendEmail({
+    to: recipient,
+    subject: `Facture ${result.invoice.invoice_number} — ${senderName}`,
+    replyTo: profile?.email ?? null,
+    html: buildSignatureEmailHtml({
+      recipientName: client?.name ?? null,
+      senderName,
+      intro: `Vous trouverez ci-joint la facture ${result.invoice.invoice_number} d'un montant de ${amount}. Vous pouvez la consulter et la signer en ligne via le lien ci-dessous.`,
+      link,
+      buttonLabel: "Consulter et signer la facture",
+    }),
+    attachments,
+  });
+
+  if (!sent.ok) return { status: "failed", error: sent.error };
+  return { status: "sent", to: recipient };
 }
 
 export async function markInvoicePaidAction(id: string) {
